@@ -125,7 +125,7 @@ class PacketStore:
                 masks.append(0)
             else:
                 if packet["id"] not in cache:
-                    value = torch.as_tensor(np.nan_to_num(np.load(self.root / packet["file"], allow_pickle=False)), device=device)
+                    value = torch.as_tensor(np.nan_to_num(np.load(self.root / packet["file"], allow_pickle=False), nan=0, posinf=0, neginf=0), device=device)
                     cache[packet["id"]] = model.encode(value, source)
                 latents.append(cache[packet["id"]])
                 qualities.append(packet["quality"])

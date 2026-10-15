@@ -22,7 +22,7 @@ def summarize(probability, target):
     order = np.argsort(confidence)
     bins = [indices for indices in np.array_split(order, min(15, len(y))) if len(indices)]
     ece = sum(len(indices) / len(y) * abs(confidence[indices].mean() - correct[indices].mean()) for indices in bins)
-    return dict(macro_f1=float(f1_score(y, prediction, average="macro", zero_division=0)),
+    return dict(macro_f1=float(f1_score(y, prediction, labels=np.arange(p.shape[1]), average="macro", zero_division=0)),
                 nll=float(-np.log(p[np.arange(len(y)), y].clip(1e-8)).mean()),
                 brier=float(np.mean(np.sum((p - np.eye(p.shape[1])[y]) ** 2, 1))),
                 ece_percent=float(ece * 100), high_confidence_error_percent=float(100 * np.mean((~correct) & (confidence >= 0.9))))
@@ -182,7 +182,7 @@ def replay(args):
                   mean_action_changes=float(np.mean(action_changes)), latency_ms=float(np.mean(latencies) * 1000),
                   parameters=sum(parameter.numel() for parameter in model.parameters()), available_encoder_calls=encoder_calls,
                   late_packet_decision_pairs=late_packets,
-                  risk_coverage=[dict(coverage=float(fraction), risk=float(1 - np.mean(np.asarray(issued).argmax(1)[indices] == np.asarray(targets)[indices])))
+                  risk_coverage=[dict(coverage=len(indices) / len(targets), requested_coverage=float(fraction), risk=float(1 - np.mean(np.asarray(issued).argmax(1)[indices] == np.asarray(targets)[indices])))
                                  for fraction in np.arange(0.1, 1.01, 0.1)
                                  for indices in [np.argsort(np.asarray(issued).max(1))[::-1][:max(1, round(fraction * len(targets)))]]])
     output = Path(args.output)
@@ -239,7 +239,7 @@ def main():
             parser.error("Invalid missingness, delay or outage parameters")
         stress(args)
     elif args.command == "train":
-        if min(args.width, args.epochs, args.batch_size, args.patience, args.tau) <= 0:
+        if args.width < 2 or min(args.epochs, args.batch_size, args.patience, args.tau, args.lr) <= 0 or min(args.beta, args.kappa) < 0:
             parser.error("Positive training and age-scale parameters required")
         train(args)
     elif args.command == "replay":

@@ -134,8 +134,8 @@ def objective(full, partial, label, removed, epoch, args):
     reliability = full["reliability"][removed]
     allowance = reliability * jsd(full["discounted_probability"][removed], partial["probability"])
     move = F.relu(jsd(full["probability"], partial["probability"]) - args.revision_eta * allowance)
-    pairs = [index for index, pair in enumerate(PAIRS) if removed in pair]
-    contradiction = full["relation"][pairs, 2].mean().detach()
+    pairs = [index for index, pair in enumerate(PAIRS) if removed in pair and bool(full["mask"][pair[0]] > 0) and bool(full["mask"][pair[1]] > 0)]
+    contradiction = full["relation"][pairs, 2].mean().detach() if pairs else full["uncertainty"].new_zeros(())
     uncertainty = contradiction * F.relu(torch.minimum(full["uncertainty"].new_tensor(1), partial["uncertainty"] + args.conflict_margin * full["conflict"]) - full["uncertainty"])
     uncertainty = uncertainty + (1 - contradiction) * reliability * F.relu(full["uncertainty"] - partial["uncertainty"])
     revision = 0 if args.variant == "no_revision" else args.revision_weight * (move + uncertainty)
