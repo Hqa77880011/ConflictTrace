@@ -47,7 +47,7 @@ run_01,65,train,0
 conflicttrace prepare --packets data/packets.csv --decisions data/decisions.csv --output data/clean --context 60
 ```
 
-Use zero-based labels (normal = 0); preprocessing fits normalization on training packets. Complete runs stay in one split. Optional generated packet stress:
+Use zero-based labels (normal = 0); preprocessing fits normalization on training packets. Complete runs stay in one split. Generate the mixed packet-stress set consumed by replay below:
 
 ```bash
 conflicttrace stress --data data/clean --output data/mixed --kind mixed --seed 13
